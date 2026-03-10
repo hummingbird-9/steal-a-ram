@@ -2264,31 +2264,23 @@ debugConsole.appendChild(outputArea);
 debugConsole.appendChild(inputLine);
 document.body.appendChild(debugConsole);
 
-// Toggle console display on pressing '1'
 document.addEventListener('keydown', function(e) {
-  if (e.code === 'Digit1') {
-    debugConsole.style.display = (debugConsole.style.display === 'none') ? 'block' : 'none';
-    if(debugConsole.style.display === 'block') {
-      inputLine.focus();
+  if (e.key === '1') { // alternate - check e.key
+    var consoleDiv = document.getElementById('debugConsole');
+    if (!consoleDiv) {
+      console.log('Debug console element not found');
+      return;
+    }
+    if(consoleDiv.style.display === 'none' || !consoleDiv.style.display) {
+      consoleDiv.style.display = 'block';
+      console.log('Debug console shown');
+    } else {
+      consoleDiv.style.display = 'none';
+      console.log('Debug console hidden');
     }
   }
 });
 
-// Evaluate command and show result or error
-inputLine.addEventListener('keydown', function(e){
-  if(e.key === 'Enter') {
-    var cmd = inputLine.value.trim();
-    if(cmd.length === 0) return;
-    try {
-      var result = eval(cmd);
-      outputArea.textContent += '> ' + cmd + '\n' + String(result) + '\n';
-    } catch(err) {
-      outputArea.textContent += '> ' + cmd + '\nError: ' + err.message + '\n';
-    }
-    outputArea.scrollTop = outputArea.scrollHeight;
-    inputLine.value = '';
-  }
-});
 
 // ══════════════════════════════════════════════════════
 // BOOT
