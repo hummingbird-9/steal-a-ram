@@ -615,112 +615,10 @@ function updateMapTransform(){
 // GAMER SPRITE — pure canvas, zero external URLs
 // ══════════════════════════════════════════════════════
 var GAMER_TEX=null;
-function makeGamerSprite(){
-  var c=document.createElement('canvas');c.width=128;c.height=192;
-  var x=c.getContext('2d');
-  // ── Legs (dark jeans) ──
-  x.fillStyle='#1a1a2e';x.fillRect(36,136,26,52);x.fillRect(66,136,26,52);
-  // Knee highlight
-  x.fillStyle='#222240';x.fillRect(38,148,22,8);x.fillRect(68,148,22,8);
-  // ── Shoes (chunky gaming sneakers) ──
-  x.fillStyle='#0a0a0a';x.fillRect(32,182,30,12);x.fillRect(64,182,30,12);
-  // Shoe sole neon strip
-  x.fillStyle='#ff2200';x.fillRect(32,190,30,4);
-  x.fillStyle='#ff2200';x.fillRect(64,190,30,4);
-  // ── Hoodie torso ──
-  x.fillStyle='#14144e';x.fillRect(22,70,84,70);
-  // Hoodie arms
-  x.fillStyle='#0e0e3a';x.fillRect(2,72,22,64);x.fillRect(104,72,22,64);
-  // Cuffs
-  x.fillStyle='#1c1c4a';x.fillRect(0,130,24,8);x.fillRect(104,130,24,8);
-  // Pocket graphic area
-  x.fillStyle='#0a0a28';x.fillRect(34,96,60,36);
-  x.strokeStyle='#2222aa';x.lineWidth=1;x.strokeRect(34,96,60,36);
-  // "NO AI" text
-  x.fillStyle='#ff3322';x.font='bold 11px monospace';x.textAlign='center';x.fillText('NO AI',64,114);
-  // "PC > CLOUD" sub text
-  x.fillStyle='#00ff88';x.font='bold 7px monospace';x.fillText('PC > CLOUD',64,126);
-  // Hoodie zipper line
-  x.strokeStyle='#1a1a5a';x.lineWidth=1.5;x.beginPath();x.moveTo(64,70);x.lineTo(64,136);x.stroke();
-  // Hood drawstrings
-  x.strokeStyle='#2a2a6a';x.lineWidth=1;
-  x.beginPath();x.moveTo(52,70);x.quadraticCurveTo(50,84,48,90);x.stroke();
-  x.beginPath();x.moveTo(76,70);x.quadraticCurveTo(78,84,80,90);x.stroke();
-  // ── Neck ──
-  x.fillStyle='#e2c09a';x.fillRect(52,56,24,18);
-  // ── Head ──
-  x.save();x.beginPath();x.ellipse(64,36,28,34,0,0,Math.PI*2);x.fillStyle='#e2c09a';x.fill();x.restore();
-  // Cheek flush (angry look)
-  x.fillStyle='rgba(220,80,60,0.25)';x.beginPath();x.ellipse(42,42,10,7,0,0,Math.PI*2);x.fill();
-  x.beginPath();x.ellipse(86,42,10,7,0,0,Math.PI*2);x.fill();
-  // ── Gaming headset ──
-  // Headband arc
-  x.strokeStyle='#1a1a22';x.lineWidth=7;x.beginPath();x.arc(64,30,34,Math.PI,0);x.stroke();
-  x.strokeStyle='#333344';x.lineWidth=4;x.beginPath();x.arc(64,30,34,Math.PI,0);x.stroke();
-  // Ear cups
-  x.fillStyle='#1a1a22';x.fillRect(26,22,16,22);x.fillRect(86,22,16,22);
-  x.fillStyle='#2a2a33';x.fillRect(28,24,12,18);x.fillRect(88,24,12,18);
-  // Speaker mesh on cups
-  for(var i=0;i<4;i++){
-    x.fillStyle='#111116';x.fillRect(29,25+i*4,10,2);x.fillRect(89,25+i*4,10,2);
-  }
-  // RGB LED on headset (green)
-  x.fillStyle='#00ff44';x.fillRect(88,28,4,4);
-  x.fillStyle='rgba(0,255,68,0.4)';x.beginPath();x.arc(90,30,6,0,Math.PI*2);x.fill();
-  // Mic boom
-  x.strokeStyle='#2a2a2a';x.lineWidth=2;x.beginPath();x.moveTo(26,36);x.quadraticCurveTo(16,44,18,52);x.stroke();
-  x.fillStyle='#333';x.beginPath();x.arc(18,54,4,0,Math.PI*2);x.fill();
-  // ── Hair (dark, messy gamer hair) ──
-  x.fillStyle='#111';x.fillRect(36,4,56,28);
-  x.beginPath();x.arc(64,14,28,Math.PI,0);x.fillStyle='#111';x.fill();
-  // Messy hair spikes
-  x.fillStyle='#0a0a0a';
-  [[36,10],[44,6],[52,4],[68,4],[76,6],[88,10]].forEach(function(p){
-    x.beginPath();x.moveTo(p[0],p[1]+8);x.lineTo(p[0]-4,p[1]);x.lineTo(p[0]+4,p[1]);x.fill();
-  });
-  // ── Angry eyes ──
-  // Eye whites
-  x.fillStyle='#fff';x.fillRect(42,30,18,12);x.fillRect(68,30,18,12);
-  // Angry brow shadow
-  x.fillStyle='rgba(200,50,0,0.35)';x.fillRect(40,28,22,8);x.fillRect(66,28,22,8);
-  // Irises — red glowing
-  x.fillStyle='#cc0000';x.beginPath();x.arc(51,36,5,0,Math.PI*2);x.fill();
-  x.beginPath();x.arc(77,36,5,0,Math.PI*2);x.fill();
-  // Pupils
-  x.fillStyle='#000';x.beginPath();x.arc(51,36,2.5,0,Math.PI*2);x.fill();
-  x.beginPath();x.arc(77,36,2.5,0,Math.PI*2);x.fill();
-  // Eye glow
-  x.fillStyle='rgba(255,0,0,0.28)';x.beginPath();x.arc(51,36,9,0,Math.PI*2);x.fill();
-  x.beginPath();x.arc(77,36,9,0,Math.PI*2);x.fill();
-  // Angry eyebrows (angled inward)
-  x.strokeStyle='#220000';x.lineWidth=3;
-  x.beginPath();x.moveTo(40,27);x.lineTo(60,31);x.stroke();
-  x.beginPath();x.moveTo(88,27);x.lineTo(68,31);x.stroke();
-  // ── Nose ──
-  x.fillStyle='#c8a070';x.beginPath();x.moveTo(60,44);x.lineTo(56,50);x.lineTo(72,50);x.lineTo(68,44);x.fill();
-  // ── Mouth (angry sneer) ──
-  x.strokeStyle='#5a1a00';x.lineWidth=2;
-  x.beginPath();x.moveTo(46,56);x.lineTo(57,52);x.lineTo(71,52);x.lineTo(82,56);x.stroke();
-  // Teeth showing
-  x.fillStyle='#ddd';x.fillRect(55,52,18,5);
-  x.strokeStyle='#aaa';x.lineWidth=.5;
-  for(var t=0;t<4;t++){x.beginPath();x.moveTo(58+t*4,52);x.lineTo(58+t*4,57);x.stroke();}
-  // ── Controller in right hand ──
-  x.fillStyle='#1a1a1a';x.fillRect(106,92,22,16);
-  x.fillStyle='#2a2a2a';x.fillRect(108,94,18,12);
-  // D-pad
-  x.fillStyle='#111';x.fillRect(110,97,5,5);x.fillRect(108,99,9,1);
-  // ABXY buttons
-  x.fillStyle='#ff3333';x.beginPath();x.arc(122,96,1.8,0,Math.PI*2);x.fill();
-  x.fillStyle='#3366ff';x.beginPath();x.arc(118,94,1.8,0,Math.PI*2);x.fill();
-  x.fillStyle='#33ff33';x.beginPath();x.arc(124,98,1.8,0,Math.PI*2);x.fill();
-  x.fillStyle='#ffff00';x.beginPath();x.arc(120,100,1.8,0,Math.PI*2);x.fill();
-  // ── Right arm holding controller ──
-  x.fillStyle='#0e0e3a';x.fillRect(104,88,22,6);
-  // ── Shadow at feet ──
-  x.fillStyle='rgba(0,0,0,0.2)';x.save();x.scale(1,.35);x.beginPath();x.arc(64,192/.35,24,0,Math.PI*2);x.fill();x.restore();
-  return new THREE.CanvasTexture(c);
-}
+var enemyTexture = new THREE.TextureLoader().load('https://uploads.onecompiler.io/447q8n6ua/44ft5enqw/Drawing-6.sketchpad%20(2).png');
+enemyTexture.magFilter = THREE.NearestFilter;
+enemyTexture.minFilter = THREE.LinearMipMapLinearFilter;
+
 
 // ══════════════════════════════════════════════════════
 // PART MODELS
@@ -911,8 +809,8 @@ function makeSSDModel(){
     var pin=new THREE.Mesh(new THREE.BoxGeometry(.028,.09,.44),new THREE.MeshLambertMaterial({color:0xd4b030}));
     pin.position.set(-0.46+i*.048,0,1.80);g.add(pin);
   }
-  // Mounting screw hole
-  var screw=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.16,7),new THREE.MeshLambertMaterial({color:0x3a3a3a}));screw.rotation.z=Math.PI/2;screw.position.set(0,0,-1.75);g.add(screw);
+  // Mounting ***** hole
+  var *****=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.16,7),new THREE.MeshLambertMaterial({color:0x3a3a3a}));*****.rotation.z=Math.PI/2;*****.position.set(0,0,-1.75);g.add(*****);
   // Thermal pad suggestion (slightly different color patches)
   var thermPad=new THREE.Mesh(new THREE.BoxGeometry(.88,.155,.9),new THREE.MeshLambertMaterial({color:0x161e16,transparent:true,opacity:.7}));thermPad.position.set(0,.01,-.3);g.add(thermPad);
   // SMD caps along edge
@@ -1626,7 +1524,7 @@ function trySpawnEnemy(){
   var ang=Math.random()*Math.PI*2,dist=18+Math.random()*42;
   var x=PP.x+Math.cos(ang)*dist,z=PP.z+Math.sin(ang)*dist;
   var y=groundH(x,z)+1.6;
-  var mat=new THREE.MeshBasicMaterial({map:GAMER_TEX,transparent:true,alphaTest:.04,side:THREE.DoubleSide,depthWrite:false});
+var mat=new THREE.MeshBasicMaterial({map:enemyTexture,transparent:true,alphaTest:.04,side:THREE.DoubleSide,depthWrite:false});
   var sprite=new THREE.Mesh(new THREE.PlaneGeometry(2.4,3.6),mat);
   sprite.position.set(x,y+1.4,z);SCN.add(sprite);
   var shadow=new THREE.Mesh(new THREE.CircleGeometry(.72,8),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.35,depthWrite:false}));
