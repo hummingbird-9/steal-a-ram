@@ -2265,21 +2265,28 @@ debugConsole.appendChild(inputLine);
 document.body.appendChild(debugConsole);
 
 document.addEventListener('keydown', function(e) {
-  if (e.key === '1') { // alternate - check e.key
+  // Ignore if typing in input or textarea
+  if (['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+  // Check key code for '1' above Q row
+  if (e.code === 'Digit1') {
     var consoleDiv = document.getElementById('debugConsole');
     if (!consoleDiv) {
       console.log('Debug console element not found');
       return;
     }
-    if(consoleDiv.style.display === 'none' || !consoleDiv.style.display) {
+    if (consoleDiv.style.display === 'none' || !consoleDiv.style.display) {
       consoleDiv.style.display = 'block';
+      inputLine.focus();
       console.log('Debug console shown');
     } else {
       consoleDiv.style.display = 'none';
       console.log('Debug console hidden');
     }
+    e.preventDefault();
   }
 });
+
 
 
 // ══════════════════════════════════════════════════════
