@@ -810,7 +810,7 @@ function makeRAMModel(){
   return g;
 }
 
-// RTX 5090 Founders Edition — correct 2-fan horizontal card, sleek aluminum shroud
+// RTX 5090 Founders Edition — currently the fans are facing the wrong way x-x
 function makeGPUModel(){
   var g=new THREE.Group();
   // PCB — large (5090 is a big card), very thin
@@ -825,7 +825,7 @@ function makeGPUModel(){
   var accL=new THREE.Mesh(new THREE.BoxGeometry(.08,.68,3.62),new THREE.MeshLambertMaterial({color:0x353545}));accL.position.set(3.74,.58,0);g.add(accL);
   var accR=accL.clone();accR.position.x=-3.74;g.add(accR);
 
-  // ── TWO FANS (5090 FE is dual-fan) ──
+  // TWO FANS
   // Fans positioned symmetrically along the long axis
   [-1.8,1.8].forEach(function(fz){
     // Fan housing cutout (dark recessed area)
@@ -840,7 +840,7 @@ function makeGPUModel(){
     // Hub cap detail
     var hubCap=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.16,8),new THREE.MeshLambertMaterial({color:0x1e1e24}));
     hubCap.rotation.x=Math.PI/2;hubCap.position.set(0,1.13,fz);g.add(hubCap);
-    // Fan blades — 11 asymmetric swept blades (FE fans are angular)
+    // Fan blades -- broken :sob:
     // Blades are in XZ plane (fan face toward +Y)
     var bladeMat=new THREE.MeshLambertMaterial({color:0x242430});
     var bladeMatEdge=new THREE.MeshLambertMaterial({color:0x2e2e3e});
