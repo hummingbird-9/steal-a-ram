@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DATA CENTER LOOP — FPS v3</title>
+<title>Steal a RAM</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
@@ -124,25 +124,25 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 <body>
 
 <div id="start-screen" class="screen active">
-  <div class="logo">DATA CENTER LOOP</div>
-  <div class="sub">THE COMPUTE MUST GROW</div>
-  <button class="btn" onclick="switchScreen('faction-screen')"><span>BOOT SEQUENCE</span></button>
+  <div class="logo">Steal a RAM</div>
+  <div class="sub">More AI!!! MOARRRRR</div>
+  <button class="btn" onclick="switchScreen('faction-screen')"><span>Start Game</span></button>
 </div>
 
 <div id="faction-screen" class="screen">
-  <div class="logo" style="font-size:1.7rem">SELECT YOUR AI LAB</div>
+  <div class="logo" style="font-size:1.7rem">SELECT YOUR AI COMPANY</div>
   <div class="sub" style="margin-bottom:0">Who is responsible for this acquisition?</div>
   <div class="fgrid">
     <div class="fcard" onclick="selectFaction('OpenAI')"><div class="fname">OpenAI</div><div class="fdesc">Aggressive scaling. Unprecedented investment. Definitely sustainable.</div></div>
     <div class="fcard" onclick="selectFaction('Anthropic')"><div class="fname">Anthropic</div><div class="fdesc">Safety-focused. Constitutional AI. Still needs the GPUs though.</div></div>
-    <div class="fcard" onclick="selectFaction('Google')"><div class="fname">Google</div><div class="fdesc">Has TPUs. Buys Nvidia anyway. Cancelled three products today.</div></div>
+    <div class="fcard" onclick="selectFaction('Google')"><div class="fname">Google</div><div class="fdesc">Has TPUs. Buys Nvidia anyway. Cancelled fourteen products today.</div></div>
     <div class="fcard" onclick="selectFaction('Meta')"><div class="fname">Meta</div><div class="fdesc">Open source everything. Except the hardware. That's ours.</div></div>
   </div>
 </div>
 
 <div id="difficulty-screen" class="screen">
   <div class="logo" style="font-size:1.6rem">SELECT DIFFICULTY</div>
-  <div class="sub" style="margin-bottom:8px">How hard do the Mad Gamers resist?</div>
+  <div class="sub" style="margin-bottom:8px">How hard do the PC Builders resist?</div>
   <div class="dgrid">
     <div class="dcard easy" onclick="selectDifficulty('easy')">
       <div class="dname">EASY</div>
@@ -243,7 +243,7 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 
 <div id="game-over-screen" class="screen">
   <div class="gotitle">YOU DIED</div>
-  <div class="gosub">A Mad PC Gamer ended your acquisition run.</div>
+  <div class="gosub">A PC Builder ended your run.</div>
   <button class="btn" onclick="retryMission()"><span>RETRY MISSION</span></button>
   <button class="btn" onclick="exitToHub()"><span>RETREAT TO HUB</span></button>
 </div>
@@ -355,82 +355,108 @@ function getBiomeColor(wx,wz,h){
 }
 
 // ══════════════════════════════════════════════════════
-// RIVER SYSTEM
+// WATER SYSTEM (RIVERS & OCEANS)
 // ══════════════════════════════════════════════════════
-var RIVERS=[];
-var RIVER_MAT=new THREE.MeshLambertMaterial({color:0x1a66cc,transparent:true,opacity:.72,side:THREE.DoubleSide});
+var RIVERS = [];
+var SEA_LEVEL = -2.5; // Adjust this to flood more/less of the map
+var WATER_COLOR = 0x1a66cc;
 
-function generateRivers(){
-  RIVERS=[];
-  var seeds=[
-    {sx:-180,sz:-120,ang:.4,w:5.5},{sx:60,sz:200,ang:2.1,w:6.2},
-    {sx:-80,sz:180,ang:-.6,w:4.8},{sx:220,sz:-80,ang:1.8,w:5.0},
-    {sx:-250,sz:60,ang:.9,w:7.0},{sx:100,sz:-200,ang:2.6,w:4.5},
-    {sx:300,sz:150,ang:3.2,w:5.0},{sx:-150,sz:300,ang:.2,w:4.0}
-  ];
-  seeds.forEach(function(s){
-    var pts=[{x:s.sx,z:s.sz}],cx=s.sx,cz=s.sz,ang=s.ang;
-    for(var i=0;i<55;i++){
-      ang+=(fbm(cx*.03+i,cz*.03,1)-.5)*1.1;
-      cx+=Math.cos(ang)*22+Math.sin(ang*1.7)*4;cz+=Math.sin(ang)*22+Math.cos(ang*1.3)*4;
-      pts.push({x:cx,z:cz});
-    }
-    RIVERS.push({pts:pts,width:s.w});
-  });
+var RIVER_MAT = new THREE.MeshLambertMaterial({
+    color: WATER_COLOR,
+    transparent: true,
+    opacity: 0.75,
+    side: THREE.DoubleSide
+});
+
+function generateRivers() {
+    RIVERS = [];
+    // sx/sz: Start position, ang: direction, w: width
+    var seeds = [
+        {sx: -500, sz: -400, ang: 0.5, w: 8}, {sx: 400, sz: 600, ang: 3.5, w: 10},
+        {sx: -600, sz: 200, ang: 1.2, w: 7}, {sx: 300, sz: -500, ang: 2.8, w: 9}
+    ];
+
+    seeds.forEach(function(s) {
+        var pts = [{x: s.sx, z: s.sz}], cx = s.sx, cz = s.sz, ang = s.ang;
+        // 120 steps creates much longer, continuous rivers
+        for (var i = 0; i < 120; i++) {
+            // Smoother noise for natural curves (reduced multiplier to 0.4)
+            ang += (fbm(cx * 0.005, cz * 0.005, 1) - 0.5) * 0.4;
+            cx += Math.cos(ang) * 30; // Consistent step size
+            cz += Math.sin(ang) * 30;
+            pts.push({x: cx, z: cz});
+        }
+        RIVERS.push({pts: pts, width: s.w});
+    });
 }
 
-function isNearRiver(x,z,thr){
-  thr=thr||10;
-  for(var r=0;r<RIVERS.length;r++){
-    var rv=RIVERS[r];
-    for(var i=0;i<rv.pts.length-1;i++){
-      var p1=rv.pts[i],p2=rv.pts[i+1];
-      var ddx=p2.x-p1.x,ddz=p2.z-p1.z,len=Math.sqrt(ddx*ddx+ddz*ddz);
-      if(len<.001)continue;
-      var t2=Math.max(0,Math.min(1,((x-p1.x)*ddx+(z-p1.z)*ddz)/(len*len)));
-      var nx=p1.x+t2*ddx-x,nz=p1.z+t2*ddz-z;
-      if(Math.sqrt(nx*nx+nz*nz)<thr+rv.width)return true;
-    }
-  }
-  return false;
+// Global Ocean: One large plane to handle the deep water
+function spawnOcean() {
+    var oGeo = new THREE.PlaneGeometry(10000, 10000);
+    var oMesh = new THREE.Mesh(oGeo, RIVER_MAT);
+    oMesh.rotation.x = -Math.PI / 2;
+    oMesh.position.y = SEA_LEVEL;
+    SCN.add(oMesh);
 }
 
-function buildRiversInChunk(ox,oz,ch){
-  var oxE=ox+CHUNK_SZ,ozE=oz+CHUNK_SZ;
-  RIVERS.forEach(function(rv){
-    for(var i=0;i<rv.pts.length-1;i++){
-      var p1=rv.pts[i],p2=rv.pts[i+1];
-      if(Math.max(p1.x,p2.x)<ox-rv.width||Math.min(p1.x,p2.x)>oxE+rv.width)continue;
-      if(Math.max(p1.z,p2.z)<oz-rv.width||Math.min(p1.z,p2.z)>ozE+rv.width)continue;
-      var segLen=Math.sqrt(Math.pow(p2.x-p1.x,2)+Math.pow(p2.z-p1.z,2));
-      var segAng=Math.atan2(p2.z-p1.z,p2.x-p1.x);
-      var mx=(p1.x+p2.x)/2,mz=(p1.z+p2.z)/2;
-      var gy=Math.min(terrH(p1.x,p1.z),terrH(p2.x,p2.z))-.5;
-      var rGeo=new THREE.PlaneGeometry(segLen+rv.width*2,rv.width*2.2,4,2);rGeo.rotateX(-Math.PI/2);
-      var rMesh=new THREE.Mesh(rGeo,RIVER_MAT.clone());
-      rMesh.position.set(mx,gy,mz);rMesh.rotation.y=-segAng;SCN.add(rMesh);ch.meshes.push(rMesh);
-      var bankGeo=new THREE.PlaneGeometry(segLen+rv.width*2.8,rv.width*3.0,2,1);bankGeo.rotateX(-Math.PI/2);
-      var bankMesh=new THREE.Mesh(bankGeo,new THREE.MeshLambertMaterial({color:0x2a3820}));
-      bankMesh.position.set(mx,gy-.04,mz);bankMesh.rotation.y=-segAng;SCN.add(bankMesh);ch.meshes.push(bankMesh);
-      // Ripple highlights on water
-      for(var rp=0;rp<3;rp++){
-        var rplGeo=new THREE.PlaneGeometry(segLen*.7+Math.random()*8,rv.width*.3,1,1);rplGeo.rotateX(-Math.PI/2);
-        var rplMesh=new THREE.Mesh(rplGeo,new THREE.MeshBasicMaterial({color:0x4488ff,transparent:true,opacity:.18}));
-        rplMesh.position.set(mx+(Math.random()-.5)*4,gy+.02,mz+(Math.random()-.5)*rv.width*.4);rplMesh.rotation.y=-segAng;
-        SCN.add(rplMesh);ch.meshes.push(rplMesh);
-      }
-      for(var rk=0;rk<5;rk++){
-        var side=(rk%2===0?1:-1)*((rv.width*1.2)+Math.random()*.8);
-        var along=(Math.random()-.5)*segLen*.8;
-        var bx=mx+Math.cos(-segAng+Math.PI/2)*side+Math.cos(-segAng)*along;
-        var bz=mz+Math.sin(-segAng+Math.PI/2)*side+Math.sin(-segAng)*along;
-        var rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.25+Math.random()*.28,0),new THREE.MeshLambertMaterial({color:0x4a4858}));
-        rock.position.set(bx,terrH(bx,bz)+.18,bz);rock.rotation.set(Math.random()*2,Math.random()*2,Math.random()*2);
-        SCN.add(rock);ch.meshes.push(rock);
-      }
+function isNearRiver(x, z, thr) {
+    thr = thr || 12;
+    for (var r = 0; r < RIVERS.length; r++) {
+        var rv = RIVERS[r];
+        for (var i = 0; i < rv.pts.length - 1; i++) {
+            var p1 = rv.pts[i], p2 = rv.pts[i + 1];
+            var ddx = p2.x - p1.x, ddz = p2.z - p1.z;
+            var lenSq = ddx * ddx + ddz * ddz;
+            if (lenSq < 1) continue;
+            var t = Math.max(0, Math.min(1, ((x - p1.x) * ddx + (z - p1.z) * ddz) / lenSq));
+            var nx = p1.x + t * ddx - x, nz = p1.z + t * ddz - z;
+            if (Math.sqrt(nx * nx + nz * nz) < thr + rv.width) return true;
+        }
     }
-  });
+    return false;
 }
+
+function buildRiversInChunk(ox, oz, ch) {
+    var oxE = ox + CHUNK_SZ, ozE = oz + CHUNK_SZ;
+    
+    RIVERS.forEach(function(rv) {
+        for (var i = 0; i < rv.pts.length - 1; i++) {
+            var p1 = rv.pts[i], p2 = rv.pts[i + 1];
+            
+            // Bounds check for chunk optimization
+            if (Math.max(p1.x, p2.x) < ox - 20 || Math.min(p1.x, p2.x) > oxE + 20) continue;
+            if (Math.max(p1.z, p2.z) < oz - 20 || Math.min(p1.z, p2.z) > ozE + 20) continue;
+
+            var dx = p2.x - p1.x, dz = p2.z - p1.z;
+            var segLen = Math.sqrt(dx * dx + dz * dz);
+            var segAng = Math.atan2(dz, dx);
+            var mx = (p1.x + p2.x) / 2, mz = (p1.z + p2.z) / 2;
+            
+            // Set river height just above sea level or slightly recessed into terrain
+            var gy = Math.max(SEA_LEVEL + 0.1, terrH(mx, mz) - 0.3);
+
+            // River Water Surface
+            var rGeo = new THREE.PlaneGeometry(segLen + 5, rv.width * 2.2); 
+            rGeo.rotateX(-Math.PI / 2);
+            var rMesh = new THREE.Mesh(rGeo, RIVER_MAT);
+            rMesh.position.set(mx, gy, mz);
+            rMesh.rotation.y = -segAng;
+            SCN.add(rMesh);
+            ch.meshes.push(rMesh);
+
+            // Darker river bed / banks
+            var bGeo = new THREE.PlaneGeometry(segLen + 5.5, rv.width * 3.5);
+            bGeo.rotateX(-Math.PI / 2);
+            var bMesh = new THREE.Mesh(bGeo, new THREE.MeshLambertMaterial({color: 0x152210}));
+            bMesh.position.set(mx, gy - 0.1, mz);
+            bMesh.rotation.y = -segAng;
+            SCN.add(bMesh);
+            ch.meshes.push(bMesh);
+        }
+    });
+}
+
+
 
 // ══════════════════════════════════════════════════════
 // CANVAS WORLD MAP
