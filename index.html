@@ -125,24 +125,24 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 
 <div id="start-screen" class="screen active">
   <div class="logo">Steal a RAM</div>
-  <div class="sub">THE AI DATA CENTER POPULATION MUST GROW</div>
-  <button class="btn" onclick="switchScreen('faction-screen')"><span>START GAME</span></button>
+  <div class="sub">More AI!!! MOARRRRR</div>
+  <button class="btn" onclick="switchScreen('faction-screen')"><span>Start Game</span></button>
 </div>
 
 <div id="faction-screen" class="screen">
   <div class="logo" style="font-size:1.7rem">SELECT YOUR AI COMPANY</div>
   <div class="sub" style="margin-bottom:0">Who is responsible for this acquisition?</div>
   <div class="fgrid">
-    <div class="fcard" onclick="selectFaction('OpenAI')"><div class="fname">OpenAI</div><div class="fdesc">Aggressive scaling. Unprecedented investment. Definitely sustainable buut CEO is whack.</div></div>
+    <div class="fcard" onclick="selectFaction('OpenAI')"><div class="fname">OpenAI</div><div class="fdesc">Aggressive scaling. Unprecedented investment. Definitely sustainable.</div></div>
     <div class="fcard" onclick="selectFaction('Anthropic')"><div class="fname">Anthropic</div><div class="fdesc">Safety-focused. Constitutional AI. Still needs the GPUs though.</div></div>
-    <div class="fcard" onclick="selectFaction('Google')"><div class="fname">Google</div><div class="fdesc">Has TPUs. Buys Nvidia anyway. Cancelled three products today.</div></div>
+    <div class="fcard" onclick="selectFaction('Google')"><div class="fname">Google</div><div class="fdesc">Has TPUs. Buys Nvidia anyway. Cancelled fourteen products today.</div></div>
     <div class="fcard" onclick="selectFaction('Meta')"><div class="fname">Meta</div><div class="fdesc">Open source everything. Except the hardware. That's ours.</div></div>
   </div>
 </div>
 
 <div id="difficulty-screen" class="screen">
   <div class="logo" style="font-size:1.6rem">SELECT DIFFICULTY</div>
-  <div class="sub" style="margin-bottom:8px">How much do the mad PC builders resist?</div>
+  <div class="sub" style="margin-bottom:8px">How hard do the PC Builders resist?</div>
   <div class="dgrid">
     <div class="dcard easy" onclick="selectDifficulty('easy')">
       <div class="dname">EASY</div>
@@ -220,7 +220,7 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
     <div id="dov"></div>
     <div id="cov"></div>
     <div id="apick">+ AMMO PACK</div>
-    <div id="interact"></div>
+    <div id="interact">[ E ] ENTER BUILDING</div>
     <div id="biomeHUD">◈ PLAINS · 0, 0</div>
     <div id="sprintind">SHIFT: SPRINT</div>
     <div id="weaponlabel">WEAPON: AR-15</div>
@@ -243,7 +243,7 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 
 <div id="game-over-screen" class="screen">
   <div class="gotitle">YOU DIED</div>
-  <div class="gosub">A Mad PC Gamer ended your acquisition run.</div>
+  <div class="gosub">A PC Builder ended your run.</div>
   <button class="btn" onclick="retryMission()"><span>RETRY MISSION</span></button>
   <button class="btn" onclick="exitToHub()"><span>RETREAT TO HUB</span></button>
 </div>
@@ -355,82 +355,108 @@ function getBiomeColor(wx,wz,h){
 }
 
 // ══════════════════════════════════════════════════════
-// RIVER SYSTEM
+// WATER SYSTEM (RIVERS & OCEANS)
 // ══════════════════════════════════════════════════════
-var RIVERS=[];
-var RIVER_MAT=new THREE.MeshLambertMaterial({color:0x1a66cc,transparent:true,opacity:.72,side:THREE.DoubleSide});
+var RIVERS = [];
+var SEA_LEVEL = -2.5; // Adjust this to flood more/less of the map
+var WATER_COLOR = 0x1a66cc;
 
-function generateRivers(){
-  RIVERS=[];
-  var seeds=[
-    {sx:-180,sz:-120,ang:.4,w:5.5},{sx:60,sz:200,ang:2.1,w:6.2},
-    {sx:-80,sz:180,ang:-.6,w:4.8},{sx:220,sz:-80,ang:1.8,w:5.0},
-    {sx:-250,sz:60,ang:.9,w:7.0},{sx:100,sz:-200,ang:2.6,w:4.5},
-    {sx:300,sz:150,ang:3.2,w:5.0},{sx:-150,sz:300,ang:.2,w:4.0}
-  ];
-  seeds.forEach(function(s){
-    var pts=[{x:s.sx,z:s.sz}],cx=s.sx,cz=s.sz,ang=s.ang;
-    for(var i=0;i<55;i++){
-      ang+=(fbm(cx*.03+i,cz*.03,1)-.5)*1.1;
-      cx+=Math.cos(ang)*22+Math.sin(ang*1.7)*4;cz+=Math.sin(ang)*22+Math.cos(ang*1.3)*4;
-      pts.push({x:cx,z:cz});
-    }
-    RIVERS.push({pts:pts,width:s.w});
-  });
+var RIVER_MAT = new THREE.MeshLambertMaterial({
+    color: WATER_COLOR,
+    transparent: true,
+    opacity: 0.75,
+    side: THREE.DoubleSide
+});
+
+function generateRivers() {
+    RIVERS = [];
+    // sx/sz: Start position, ang: direction, w: width
+    var seeds = [
+        {sx: -500, sz: -400, ang: 0.5, w: 8}, {sx: 400, sz: 600, ang: 3.5, w: 10},
+        {sx: -600, sz: 200, ang: 1.2, w: 7}, {sx: 300, sz: -500, ang: 2.8, w: 9}
+    ];
+
+    seeds.forEach(function(s) {
+        var pts = [{x: s.sx, z: s.sz}], cx = s.sx, cz = s.sz, ang = s.ang;
+        // 120 steps creates much longer, continuous rivers
+        for (var i = 0; i < 120; i++) {
+            // Smoother noise for natural curves (reduced multiplier to 0.4)
+            ang += (fbm(cx * 0.005, cz * 0.005, 1) - 0.5) * 0.4;
+            cx += Math.cos(ang) * 30; // Consistent step size
+            cz += Math.sin(ang) * 30;
+            pts.push({x: cx, z: cz});
+        }
+        RIVERS.push({pts: pts, width: s.w});
+    });
 }
 
-function isNearRiver(x,z,thr){
-  thr=thr||10;
-  for(var r=0;r<RIVERS.length;r++){
-    var rv=RIVERS[r];
-    for(var i=0;i<rv.pts.length-1;i++){
-      var p1=rv.pts[i],p2=rv.pts[i+1];
-      var ddx=p2.x-p1.x,ddz=p2.z-p1.z,len=Math.sqrt(ddx*ddx+ddz*ddz);
-      if(len<.001)continue;
-      var t2=Math.max(0,Math.min(1,((x-p1.x)*ddx+(z-p1.z)*ddz)/(len*len)));
-      var nx=p1.x+t2*ddx-x,nz=p1.z+t2*ddz-z;
-      if(Math.sqrt(nx*nx+nz*nz)<thr+rv.width)return true;
-    }
-  }
-  return false;
+// Global Ocean: One large plane to handle the deep water
+function spawnOcean() {
+    var oGeo = new THREE.PlaneGeometry(10000, 10000);
+    var oMesh = new THREE.Mesh(oGeo, RIVER_MAT);
+    oMesh.rotation.x = -Math.PI / 2;
+    oMesh.position.y = SEA_LEVEL;
+    SCN.add(oMesh);
 }
 
-function buildRiversInChunk(ox,oz,ch){
-  var oxE=ox+CHUNK_SZ,ozE=oz+CHUNK_SZ;
-  RIVERS.forEach(function(rv){
-    for(var i=0;i<rv.pts.length-1;i++){
-      var p1=rv.pts[i],p2=rv.pts[i+1];
-      if(Math.max(p1.x,p2.x)<ox-rv.width||Math.min(p1.x,p2.x)>oxE+rv.width)continue;
-      if(Math.max(p1.z,p2.z)<oz-rv.width||Math.min(p1.z,p2.z)>ozE+rv.width)continue;
-      var segLen=Math.sqrt(Math.pow(p2.x-p1.x,2)+Math.pow(p2.z-p1.z,2));
-      var segAng=Math.atan2(p2.z-p1.z,p2.x-p1.x);
-      var mx=(p1.x+p2.x)/2,mz=(p1.z+p2.z)/2;
-      var gy=Math.min(terrH(p1.x,p1.z),terrH(p2.x,p2.z))-.5;
-      var rGeo=new THREE.PlaneGeometry(segLen+rv.width*2,rv.width*2.2,4,2);rGeo.rotateX(-Math.PI/2);
-      var rMesh=new THREE.Mesh(rGeo,RIVER_MAT.clone());
-      rMesh.position.set(mx,gy,mz);rMesh.rotation.y=-segAng;SCN.add(rMesh);ch.meshes.push(rMesh);
-      var bankGeo=new THREE.PlaneGeometry(segLen+rv.width*2.8,rv.width*3.0,2,1);bankGeo.rotateX(-Math.PI/2);
-      var bankMesh=new THREE.Mesh(bankGeo,new THREE.MeshLambertMaterial({color:0x2a3820}));
-      bankMesh.position.set(mx,gy-.04,mz);bankMesh.rotation.y=-segAng;SCN.add(bankMesh);ch.meshes.push(bankMesh);
-      // Ripple highlights on water
-      for(var rp=0;rp<3;rp++){
-        var rplGeo=new THREE.PlaneGeometry(segLen*.7+Math.random()*8,rv.width*.3,1,1);rplGeo.rotateX(-Math.PI/2);
-        var rplMesh=new THREE.Mesh(rplGeo,new THREE.MeshBasicMaterial({color:0x4488ff,transparent:true,opacity:.18}));
-        rplMesh.position.set(mx+(Math.random()-.5)*4,gy+.02,mz+(Math.random()-.5)*rv.width*.4);rplMesh.rotation.y=-segAng;
-        SCN.add(rplMesh);ch.meshes.push(rplMesh);
-      }
-      for(var rk=0;rk<5;rk++){
-        var side=(rk%2===0?1:-1)*((rv.width*1.2)+Math.random()*.8);
-        var along=(Math.random()-.5)*segLen*.8;
-        var bx=mx+Math.cos(-segAng+Math.PI/2)*side+Math.cos(-segAng)*along;
-        var bz=mz+Math.sin(-segAng+Math.PI/2)*side+Math.sin(-segAng)*along;
-        var rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.25+Math.random()*.28,0),new THREE.MeshLambertMaterial({color:0x4a4858}));
-        rock.position.set(bx,terrH(bx,bz)+.18,bz);rock.rotation.set(Math.random()*2,Math.random()*2,Math.random()*2);
-        SCN.add(rock);ch.meshes.push(rock);
-      }
+function isNearRiver(x, z, thr) {
+    thr = thr || 12;
+    for (var r = 0; r < RIVERS.length; r++) {
+        var rv = RIVERS[r];
+        for (var i = 0; i < rv.pts.length - 1; i++) {
+            var p1 = rv.pts[i], p2 = rv.pts[i + 1];
+            var ddx = p2.x - p1.x, ddz = p2.z - p1.z;
+            var lenSq = ddx * ddx + ddz * ddz;
+            if (lenSq < 1) continue;
+            var t = Math.max(0, Math.min(1, ((x - p1.x) * ddx + (z - p1.z) * ddz) / lenSq));
+            var nx = p1.x + t * ddx - x, nz = p1.z + t * ddz - z;
+            if (Math.sqrt(nx * nx + nz * nz) < thr + rv.width) return true;
+        }
     }
-  });
+    return false;
 }
+
+function buildRiversInChunk(ox, oz, ch) {
+    var oxE = ox + CHUNK_SZ, ozE = oz + CHUNK_SZ;
+    
+    RIVERS.forEach(function(rv) {
+        for (var i = 0; i < rv.pts.length - 1; i++) {
+            var p1 = rv.pts[i], p2 = rv.pts[i + 1];
+            
+            // Bounds check for chunk optimization
+            if (Math.max(p1.x, p2.x) < ox - 20 || Math.min(p1.x, p2.x) > oxE + 20) continue;
+            if (Math.max(p1.z, p2.z) < oz - 20 || Math.min(p1.z, p2.z) > ozE + 20) continue;
+
+            var dx = p2.x - p1.x, dz = p2.z - p1.z;
+            var segLen = Math.sqrt(dx * dx + dz * dz);
+            var segAng = Math.atan2(dz, dx);
+            var mx = (p1.x + p2.x) / 2, mz = (p1.z + p2.z) / 2;
+            
+            // Set river height just above sea level or slightly recessed into terrain
+            var gy = Math.max(SEA_LEVEL + 0.1, terrH(mx, mz) - 0.3);
+
+            // River Water Surface
+            var rGeo = new THREE.PlaneGeometry(segLen + 5, rv.width * 2.2); 
+            rGeo.rotateX(-Math.PI / 2);
+            var rMesh = new THREE.Mesh(rGeo, RIVER_MAT);
+            rMesh.position.set(mx, gy, mz);
+            rMesh.rotation.y = -segAng;
+            SCN.add(rMesh);
+            ch.meshes.push(rMesh);
+
+            // Darker river bed / banks
+            var bGeo = new THREE.PlaneGeometry(segLen + 5.5, rv.width * 3.5);
+            bGeo.rotateX(-Math.PI / 2);
+            var bMesh = new THREE.Mesh(bGeo, new THREE.MeshLambertMaterial({color: 0x152210}));
+            bMesh.position.set(mx, gy - 0.1, mz);
+            bMesh.rotation.y = -segAng;
+            SCN.add(bMesh);
+            ch.meshes.push(bMesh);
+        }
+    });
+}
+
+
 
 // ══════════════════════════════════════════════════════
 // CANVAS WORLD MAP
@@ -614,16 +640,113 @@ function updateMapTransform(){
 // ══════════════════════════════════════════════════════
 // GAMER SPRITE — pure canvas, zero external URLs
 // ══════════════════════════════════════════════════════
-var GAMER_TEX = null;
-function loadGamerSprite() {
-  var texLoader = new THREE.TextureLoader();
-  texLoader.load('https://uploads.onecompiler.io/447q8n6ua/44fy3fas5/Drawing-6.sketchpad%20(4).png', function(texture) {
-    GAMER_TEX = texture;
-    GAMER_TEX.magFilter = THREE.NearestFilter;
-    GAMER_TEX.minFilter = THREE.LinearMipMapLinearFilter;
+var GAMER_TEX=null;
+function makeGamerSprite(){
+  var c=document.createElement('canvas');c.width=128;c.height=192;
+  var x=c.getContext('2d');
+  // ── Legs (dark jeans) ──
+  x.fillStyle='#1a1a2e';x.fillRect(36,136,26,52);x.fillRect(66,136,26,52);
+  // Knee highlight
+  x.fillStyle='#222240';x.fillRect(38,148,22,8);x.fillRect(68,148,22,8);
+  // ── Shoes (chunky gaming sneakers) ──
+  x.fillStyle='#0a0a0a';x.fillRect(32,182,30,12);x.fillRect(64,182,30,12);
+  // Shoe sole neon strip
+  x.fillStyle='#ff2200';x.fillRect(32,190,30,4);
+  x.fillStyle='#ff2200';x.fillRect(64,190,30,4);
+  // ── Hoodie torso ──
+  x.fillStyle='#14144e';x.fillRect(22,70,84,70);
+  // Hoodie arms
+  x.fillStyle='#0e0e3a';x.fillRect(2,72,22,64);x.fillRect(104,72,22,64);
+  // Cuffs
+  x.fillStyle='#1c1c4a';x.fillRect(0,130,24,8);x.fillRect(104,130,24,8);
+  // Pocket graphic area
+  x.fillStyle='#0a0a28';x.fillRect(34,96,60,36);
+  x.strokeStyle='#2222aa';x.lineWidth=1;x.strokeRect(34,96,60,36);
+  // "NO AI" text
+  x.fillStyle='#ff3322';x.font='bold 11px monospace';x.textAlign='center';x.fillText('NO AI',64,114);
+  // "PC > CLOUD" sub text
+  x.fillStyle='#00ff88';x.font='bold 7px monospace';x.fillText('PC > CLOUD',64,126);
+  // Hoodie zipper line
+  x.strokeStyle='#1a1a5a';x.lineWidth=1.5;x.beginPath();x.moveTo(64,70);x.lineTo(64,136);x.stroke();
+  // Hood drawstrings
+  x.strokeStyle='#2a2a6a';x.lineWidth=1;
+  x.beginPath();x.moveTo(52,70);x.quadraticCurveTo(50,84,48,90);x.stroke();
+  x.beginPath();x.moveTo(76,70);x.quadraticCurveTo(78,84,80,90);x.stroke();
+  // ── Neck ──
+  x.fillStyle='#e2c09a';x.fillRect(52,56,24,18);
+  // ── Head ──
+  x.save();x.beginPath();x.ellipse(64,36,28,34,0,0,Math.PI*2);x.fillStyle='#e2c09a';x.fill();x.restore();
+  // Cheek flush (angry look)
+  x.fillStyle='rgba(220,80,60,0.25)';x.beginPath();x.ellipse(42,42,10,7,0,0,Math.PI*2);x.fill();
+  x.beginPath();x.ellipse(86,42,10,7,0,0,Math.PI*2);x.fill();
+  // ── Gaming headset ──
+  // Headband arc
+  x.strokeStyle='#1a1a22';x.lineWidth=7;x.beginPath();x.arc(64,30,34,Math.PI,0);x.stroke();
+  x.strokeStyle='#333344';x.lineWidth=4;x.beginPath();x.arc(64,30,34,Math.PI,0);x.stroke();
+  // Ear cups
+  x.fillStyle='#1a1a22';x.fillRect(26,22,16,22);x.fillRect(86,22,16,22);
+  x.fillStyle='#2a2a33';x.fillRect(28,24,12,18);x.fillRect(88,24,12,18);
+  // Speaker mesh on cups
+  for(var i=0;i<4;i++){
+    x.fillStyle='#111116';x.fillRect(29,25+i*4,10,2);x.fillRect(89,25+i*4,10,2);
+  }
+  // RGB LED on headset (green)
+  x.fillStyle='#00ff44';x.fillRect(88,28,4,4);
+  x.fillStyle='rgba(0,255,68,0.4)';x.beginPath();x.arc(90,30,6,0,Math.PI*2);x.fill();
+  // Mic boom
+  x.strokeStyle='#2a2a2a';x.lineWidth=2;x.beginPath();x.moveTo(26,36);x.quadraticCurveTo(16,44,18,52);x.stroke();
+  x.fillStyle='#333';x.beginPath();x.arc(18,54,4,0,Math.PI*2);x.fill();
+  // ── Hair (dark, messy gamer hair) ──
+  x.fillStyle='#111';x.fillRect(36,4,56,28);
+  x.beginPath();x.arc(64,14,28,Math.PI,0);x.fillStyle='#111';x.fill();
+  // Messy hair spikes
+  x.fillStyle='#0a0a0a';
+  [[36,10],[44,6],[52,4],[68,4],[76,6],[88,10]].forEach(function(p){
+    x.beginPath();x.moveTo(p[0],p[1]+8);x.lineTo(p[0]-4,p[1]);x.lineTo(p[0]+4,p[1]);x.fill();
   });
+  // ── Angry eyes ──
+  // Eye whites
+  x.fillStyle='#fff';x.fillRect(42,30,18,12);x.fillRect(68,30,18,12);
+  // Angry brow shadow
+  x.fillStyle='rgba(200,50,0,0.35)';x.fillRect(40,28,22,8);x.fillRect(66,28,22,8);
+  // Irises — red glowing
+  x.fillStyle='#cc0000';x.beginPath();x.arc(51,36,5,0,Math.PI*2);x.fill();
+  x.beginPath();x.arc(77,36,5,0,Math.PI*2);x.fill();
+  // Pupils
+  x.fillStyle='#000';x.beginPath();x.arc(51,36,2.5,0,Math.PI*2);x.fill();
+  x.beginPath();x.arc(77,36,2.5,0,Math.PI*2);x.fill();
+  // Eye glow
+  x.fillStyle='rgba(255,0,0,0.28)';x.beginPath();x.arc(51,36,9,0,Math.PI*2);x.fill();
+  x.beginPath();x.arc(77,36,9,0,Math.PI*2);x.fill();
+  // Angry eyebrows (angled inward)
+  x.strokeStyle='#220000';x.lineWidth=3;
+  x.beginPath();x.moveTo(40,27);x.lineTo(60,31);x.stroke();
+  x.beginPath();x.moveTo(88,27);x.lineTo(68,31);x.stroke();
+  // ── Nose ──
+  x.fillStyle='#c8a070';x.beginPath();x.moveTo(60,44);x.lineTo(56,50);x.lineTo(72,50);x.lineTo(68,44);x.fill();
+  // ── Mouth (angry sneer) ──
+  x.strokeStyle='#5a1a00';x.lineWidth=2;
+  x.beginPath();x.moveTo(46,56);x.lineTo(57,52);x.lineTo(71,52);x.lineTo(82,56);x.stroke();
+  // Teeth showing
+  x.fillStyle='#ddd';x.fillRect(55,52,18,5);
+  x.strokeStyle='#aaa';x.lineWidth=.5;
+  for(var t=0;t<4;t++){x.beginPath();x.moveTo(58+t*4,52);x.lineTo(58+t*4,57);x.stroke();}
+  // ── Controller in right hand ──
+  x.fillStyle='#1a1a1a';x.fillRect(106,92,22,16);
+  x.fillStyle='#2a2a2a';x.fillRect(108,94,18,12);
+  // D-pad
+  x.fillStyle='#111';x.fillRect(110,97,5,5);x.fillRect(108,99,9,1);
+  // ABXY buttons
+  x.fillStyle='#ff3333';x.beginPath();x.arc(122,96,1.8,0,Math.PI*2);x.fill();
+  x.fillStyle='#3366ff';x.beginPath();x.arc(118,94,1.8,0,Math.PI*2);x.fill();
+  x.fillStyle='#33ff33';x.beginPath();x.arc(124,98,1.8,0,Math.PI*2);x.fill();
+  x.fillStyle='#ffff00';x.beginPath();x.arc(120,100,1.8,0,Math.PI*2);x.fill();
+  // ── Right arm holding controller ──
+  x.fillStyle='#0e0e3a';x.fillRect(104,88,22,6);
+  // ── Shadow at feet ──
+  x.fillStyle='rgba(0,0,0,0.2)';x.save();x.scale(1,.35);x.beginPath();x.arc(64,192/.35,24,0,Math.PI*2);x.fill();x.restore();
+  return new THREE.CanvasTexture(c);
 }
-
 
 // ══════════════════════════════════════════════════════
 // PART MODELS
@@ -1133,44 +1256,16 @@ function tryScoop(){
   BUCKET_FILL=1;
   spawnSplashParts(new THREE.Vector3(PP.x,PP.y,PP.z));
   flashOv('cov','rgba(0,120,220,.22)');
-
   // Collect one water unit
   var ms=MS[curMission];
   if(ms&&!ms.done){
     ms.collected++;
-
-    // Instant drain nearby water (5-8 chunks radius)
-    drainNearbyWater(PP.x, PP.z, 5, 8);
-
     updateHUD();
     addKF_water();
     if(ms.collected>=ms.target){ms.done=true;finishM();return;}
   }
   document.getElementById('scoopcoolbar').style.display='block';
 }
-
-function drainNearbyWater(px, pz, minRadiusChunks, maxRadiusChunks){
-  var minDist = CHUNK_SZ * minRadiusChunks;
-  var maxDist = CHUNK_SZ * maxRadiusChunks;
-  for(var key in CHUNKS){
-    var pts = key.split('|');
-    var cx = +pts[0] * CHUNK_SZ + CHUNK_SZ/2;
-    var cz = +pts[1] * CHUNK_SZ + CHUNK_SZ/2;
-    var dx = cx - px;
-    var dz = cz - pz;
-    var dist = Math.sqrt(dx*dx + dz*dz);
-    if(dist >= minDist && dist <= maxDist){
-      // Simulate draining water instantly
-      var waterMS = MS['water'];
-      if(waterMS && !waterMS.done){
-        waterMS.collected += waterMS.target; // mark water done
-        waterMS.done = true;
-        updateHUD();
-      }
-    }
-  }
-}
-
 
 function addKF_water(){
   var kf=document.getElementById('kf');
@@ -2117,15 +2212,6 @@ function startMission(k){
   switchScreen('game-screen');
   initGame();
 }
-//pc builder sprite function
-  function loadGamerSprite() {
-  var texLoader = new THREE.TextureLoader();
-  texLoader.load('https://uploads.onecompiler.io/447q8n6ua/44fy3fas5/Drawing-6.sketchpad%20(4).png', function(texture) {
-    GAMER_TEX = texture;
-    GAMER_TEX.magFilter = THREE.NearestFilter;
-    GAMER_TEX.minFilter = THREE.LinearMipMapLinearFilter;
-  });
-}
 
 // ══════════════════════════════════════════════════════
 // SCREEN SWITCHING
@@ -2232,12 +2318,14 @@ function playCutscene(){
 // ══════════════════════════════════════════════════════
 // BOOT
 // ══════════════════════════════════════════════════════
-window.addEventListener('load', function(){
-  // Replace makeGamerSprite() with:
-  loadGamerSprite();
+window.addEventListener('load',function(){
+  // Pre-generate gamer texture immediately so it's ready
+  GAMER_TEX=makeGamerSprite();
+  // Draw world map when globe screen is first shown
+  // (initMapEvents called by switchScreen)
 });
-
 
 </script>
 </body>
 </html>
+
